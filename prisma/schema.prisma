@@ -1,0 +1,166 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum SubscriptionPlan {
+  FREE
+  PREMIUM
+  PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELED
+  PENDING
+}
+
+enum PaymentStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+  EXPIRED
+}
+
+enum PaymentProvider {
+  DIRECT_WALLET
+  NOWPAYMENTS
+}
+
+enum AlertType {
+  WALLET_ACTIVITY
+  WHALE_BUY
+  WHALE_SELL
+  TOKEN_RISK
+  TRENDING_TOKEN
+  LIQUIDITY_SPIKE
+  SYSTEM
+}
+
+model User {
+  id             String          @id @default(cuid())
+  telegramId     BigInt          @unique
+  username       String?
+  firstName      String?
+  lastName       String?
+  referralCode   String          @unique
+  referredById   String?
+  referredBy     User?           @relation("UserReferrals", fields: [referredById], references: [id])
+  referrals      User[]          @relation("UserReferrals")
+  isAdmin        Boolean         @default(false)
+  isBanned       Boolean         @default(false)
+  xp             Int             @default(0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  wallets        TrackedWallet[]
+  alerts         Alert[]
+  subscriptions  Subscription[]
+  payments       Payment[]
+  alertSettings  AlertSettings?
+  adminProfile   Admin?
+
+  @@index([telegramId])
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   @default("operator")
+  scopes    String[] @default([])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TrackedWallet {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address       String
+  label         String?
+  network       String   @default("solana")
+  lastSignature String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  alerts        Alert[]
+
+  @@unique([userId, address])
+  @@index([address])
+}
+
+model Subscription {
+  id        String             @id @default(cuid())
+  userId    String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan      SubscriptionPlan   @default(FREE)
+  status    SubscriptionStatus @default(ACTIVE)
+  expiresAt DateTime?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@index([userId, status])
+}
+
+model Alert {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  walletId  String?
+  wallet    TrackedWallet? @relation(fields: [walletId], references: [id], onDelete: SetNull)
+  type      AlertType
+  title     String
+  message   String
+  metadata  Json?
+  sentAt    DateTime?
+  createdAt DateTime      @default(now())
+
+  @@index([userId, type])
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider       PaymentProvider @default(DIRECT_WALLET)
+  asset          String
+  amount         Decimal
+  expectedAmount Decimal?
+  destinationAddress String?
+  invoiceCode    String        @unique
+  txHash         String?       @unique
+  status         PaymentStatus @default(PENDING)
+  expiresAt      DateTime
+  confirmedAt    DateTime?
+  metadata       Json?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([userId, status])
+  @@index([invoiceCode])
+}
+
+model Referral {
+  id             String   @id @default(cuid())
+  referrerUserId String
+  referredUserId String
+  rewardGranted  Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  @@unique([referrerUserId, referredUserId])
+}
+
+model AlertSettings {
+  id                String  @id @default(cuid())
+  userId            String  @unique
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  whaleAlerts       Boolean @default(true)
+  memeAlerts        Boolean @default(true)
+  riskAlerts        Boolean @default(true)
+  minWhaleUsd       Decimal @default(10000)
+  delayedFreeAlerts Boolean @default(true)
+}

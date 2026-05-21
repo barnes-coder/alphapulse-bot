@@ -1,0 +1,14 @@
+[build]
+builder = "DOCKERFILE"
+dockerfile = "Dockerfile"
+
+[deploy]
+restart = "ON_FAILURE"
+healthcheckPath = "/health"
+healthcheckTimeout = 100
+memoryLimit = "512Mi"
+cpuLimit = "500m"
+
+[env]
+NODE_ENV = "production"
+PORT = "3000"

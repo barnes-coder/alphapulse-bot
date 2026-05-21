@@ -1,0 +1,7 @@
+{
+  email {$TLS_EMAIL}
+}
+
+{$DOMAIN} {
+  reverse_proxy app:3000
+}
