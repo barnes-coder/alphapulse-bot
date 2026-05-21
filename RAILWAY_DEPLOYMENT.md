@@ -218,6 +218,38 @@ Railway auto-connects `DATABASE_URL` and `REDIS_URL` from the services you creat
 
 ---
 
+## Optional: Railway CLI Setup
+
+If you want to use Railway from a terminal instead of the web UI, install the CLI and then run these commands.
+
+### Install the Railway CLI
+
+```bash
+npm install -g @railway/cli
+```
+
+### Login
+
+```bash
+railway login
+```
+
+### Connect your repository
+
+```bash
+railway init
+```
+
+Choose the existing project or create a new one, then deploy:
+
+```bash
+railway up
+```
+
+This is useful when you want to manage deployment and environment variables from the shell.
+
+---
+
 ## Step 8: Run Prisma Migration
 
 ### 8.1 In Railway Dashboard
