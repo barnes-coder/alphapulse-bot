@@ -24,11 +24,10 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
   app.use('/api', paymentRoutes(container));
   app.use('/api/webapp', webappRoutes(container));
 
-  // Enhanced webapp routes
   app.post('/api/webapp/trending', async (req, res, next) => {
     try {
       const tokens = await container.tokens.trending();
-      res.json({ ok: true, tokens: tokens.slice(0, 10) });
+      res.json({ ok: true, tokens: tokens.slice(0, 15) });
     } catch (error) {
       next(error);
     }
@@ -141,95 +140,77 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AlphaPulse Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <title>AlphaPulse</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { width: 100%; height: 100%; }
     body { 
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
       color: #e2e8f0;
       min-height: 100vh;
-      padding-bottom: 80px;
+      padding-bottom: 65px;
+      overflow-x: hidden;
+      -webkit-user-select: none;
+      user-select: none;
     }
-    .container { max-width: 600px; margin: 0 auto; padding: 1rem; }
+    .container { max-width: 100%; margin: 0 auto; padding: 0.75rem; }
     .header { 
       background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-      padding: 2rem 1rem;
-      border-radius: 20px;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 10px 30px rgba(6, 182, 212, 0.2);
-    }
-    .header h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
-    .header p { opacity: 0.9; font-size: 0.9rem; }
-    .nav-tabs {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1.5rem;
-      overflow-x: auto;
-      padding-bottom: 0.5rem;
-    }
-    .nav-tabs button {
-      padding: 0.75rem 1.25rem;
-      background: #1e293b;
-      border: 2px solid #334155;
-      color: #94a3b8;
+      padding: 1rem 0.75rem;
       border-radius: 12px;
-      cursor: pointer;
-      font-weight: 600;
-      white-space: nowrap;
-      transition: all 0.3s;
+      margin-bottom: 1rem;
+      box-shadow: 0 8px 24px rgba(6, 182, 212, 0.15);
     }
-    .nav-tabs button.active {
-      background: #0ea5e9;
-      border-color: #0ea5e9;
-      color: white;
-    }
-    .nav-tabs button:hover { border-color: #0ea5e9; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; animation: fadeIn 0.3s; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .header h1 { font-size: 1.5rem; margin-bottom: 0.2rem; font-weight: 700; }
+    .header p { opacity: 0.9; font-size: 0.8rem; }
+    .page { display: none; }
+    .page.active { display: block; animation: slideIn 0.25s ease-out; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .card {
       background: #0f172a;
       border: 1px solid #334155;
-      border-radius: 16px;
-      padding: 1.5rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
-    .card h2 { font-size: 1.1rem; margin-bottom: 1rem; color: #f1f5f9; }
+    .card h2 { font-size: 0.95rem; margin-bottom: 0.6rem; color: #f1f5f9; font-weight: 600; }
     .stat-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      margin-bottom: 1rem;
+      gap: 0.6rem;
+      margin-bottom: 0.75rem;
     }
     .stat-box {
-      background: #1e293b;
-      padding: 1rem;
-      border-radius: 12px;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      padding: 0.7rem;
+      border-radius: 10px;
       text-align: center;
+      border: 1px solid #334155;
     }
-    .stat-value { font-size: 1.8rem; font-weight: 700; color: #0ea5e9; }
-    .stat-label { font-size: 0.8rem; color: #94a3b8; margin-top: 0.25rem; }
-    .token-item, .wallet-item, .alert-item {
+    .stat-value { font-size: 1.4rem; font-weight: 700; color: #0ea5e9; }
+    .stat-label { font-size: 0.7rem; color: #94a3b8; margin-top: 0.2rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .item {
       background: #1e293b;
-      padding: 1rem;
-      border-radius: 12px;
-      margin-bottom: 0.75rem;
-      border-left: 4px solid #0ea5e9;
+      padding: 0.8rem;
+      border-radius: 10px;
+      margin-bottom: 0.5rem;
+      border-left: 3px solid #0ea5e9;
+      transition: all 0.2s;
     }
-    .token-item strong, .wallet-item strong { color: #f1f5f9; display: block; margin-bottom: 0.5rem; }
-    .token-price { color: #0ea5e9; font-weight: 600; }
-    .token-meta { font-size: 0.85rem; color: #94a3b8; margin-top: 0.5rem; }
+    .item:active { background: #334155; }
+    .item strong { color: #f1f5f9; display: block; margin-bottom: 0.2rem; font-size: 0.9rem; }
+    .item-meta { font-size: 0.75rem; color: #94a3b8; margin-top: 0.3rem; }
     .input-group {
       display: flex;
       gap: 0.5rem;
-      margin-bottom: 1rem;
+      margin-bottom: 0.6rem;
     }
     .input-group input {
       flex: 1;
-      padding: 0.75rem;
+      padding: 0.6rem;
       background: #1e293b;
       border: 1px solid #334155;
       border-radius: 8px;
@@ -238,26 +219,28 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
     }
     .input-group input::placeholder { color: #64748b; }
     .btn {
-      padding: 0.75rem 1.5rem;
-      background: #0ea5e9;
+      padding: 0.6rem 1rem;
+      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       font-weight: 600;
-      transition: all 0.3s;
-      font-size: 0.9rem;
+      transition: all 0.2s;
+      font-size: 0.85rem;
+      box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
     }
-    .btn:hover { background: #0284c7; transform: translateY(-2px); }
+    .btn:active { transform: scale(0.98); }
+    .btn-full { width: 100%; margin-bottom: 0.5rem; }
     .btn-small {
-      padding: 0.5rem 1rem;
-      font-size: 0.8rem;
-      margin-top: 0.5rem;
+      padding: 0.4rem 0.7rem;
+      font-size: 0.75rem;
+      margin-top: 0.4rem;
     }
-    .btn-danger { background: #ef4444; }
-    .btn-danger:hover { background: #dc2626; }
-    .error { background: #7f1d1d; color: #fca5a5; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
-    .empty { text-align: center; color: #64748b; padding: 2rem; }
+    .btn-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+    .error { background: #7f1d1d; color: #fca5a5; padding: 0.7rem; border-radius: 8px; margin-bottom: 0.75rem; font-size: 0.85rem; border-left: 3px solid #ef4444; }
+    .success { background: #1f2937; color: #86efac; padding: 0.7rem; border-radius: 8px; margin-bottom: 0.75rem; font-size: 0.85rem; border-left: 3px solid #22c55e; }
+    .empty { text-align: center; color: #64748b; padding: 1.5rem 0.75rem; font-size: 0.85rem; }
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -267,39 +250,41 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
       border-top: 1px solid #334155;
       display: flex;
       justify-content: space-around;
-      padding: 0.5rem 0;
+      padding: 0.4rem 0;
+      z-index: 100;
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
     }
     .bottom-nav button {
       flex: 1;
-      padding: 0.75rem;
+      padding: 0.5rem;
       background: none;
       border: none;
       color: #64748b;
       cursor: pointer;
-      font-size: 0.8rem;
-      transition: color 0.3s;
+      font-size: 0.7rem;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.15rem;
     }
     .bottom-nav button.active { color: #0ea5e9; }
+    .emoji { font-size: 1.1rem; }
+    .loading { text-align: center; padding: 1rem; color: #94a3b8; }
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #334155; border-top-color: #0ea5e9; border-radius: 50%; animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>AlphaPulse</h1>
-      <p id="user-greeting">Welcome to your dashboard</p>
-    </div>
-
-    <div class="nav-tabs">
-      <button class="nav-btn active" data-tab="dashboard">Dashboard</button>
-      <button class="nav-btn" data-tab="wallets">Wallets</button>
-      <button class="nav-btn" data-tab="trending">Trending</button>
-      <button class="nav-btn" data-tab="price">Price</button>
-      <button class="nav-btn" data-tab="alerts">Alerts</button>
-    </div>
-
-    <div id="dashboard" class="tab-content active">
+    <!-- Dashboard Page -->
+    <div id="dashboard" class="page active">
+      <div class="header">
+        <h1>AlphaPulse</h1>
+        <p id="user-greeting">Welcome back</p>
+      </div>
       <div class="card">
-        <h2>Your Stats</h2>
+        <h2>📊 Your Stats</h2>
         <div class="stat-grid">
           <div class="stat-box">
             <div class="stat-value" id="stat-wallets">0</div>
@@ -319,33 +304,54 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
           </div>
         </div>
       </div>
+      <div class="card">
+        <h2>⚡ Quick Actions</h2>
+        <button class="btn btn-full" onclick="switchPage('wallets')">👛 Manage Wallets</button>
+        <button class="btn btn-full" onclick="switchPage('trending')">🔥 View Trending</button>
+        <button class="btn btn-full" onclick="switchPage('alerts')">🔔 View Alerts</button>
+      </div>
     </div>
 
-    <div id="wallets" class="tab-content">
+    <!-- Wallets Page -->
+    <div id="wallets" class="page">
+      <div class="header">
+        <h1>👛 Wallets</h1>
+        <p>Track your Solana wallets</p>
+      </div>
       <div class="card">
-        <h2>Track Wallet</h2>
+        <h2>Add Wallet</h2>
         <div class="input-group">
-          <input type="text" id="wallet-address" placeholder="Solana wallet address" />
+          <input type="text" id="wallet-address" placeholder="Wallet address" />
           <button class="btn" onclick="trackWallet()">Add</button>
         </div>
-        <input type="text" id="wallet-label" placeholder="Label (optional)" style="width: 100%; padding: 0.75rem; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; margin-bottom: 1rem;" />
+        <input type="text" id="wallet-label" placeholder="Label (optional)" style="width: 100%; padding: 0.6rem; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; margin-bottom: 0.6rem; font-size: 0.9rem;" />
       </div>
       <div class="card">
         <h2>Your Wallets</h2>
-        <div id="wallets-list" class="empty">Loading wallets...</div>
+        <div id="wallets-list" class="empty">No wallets yet</div>
       </div>
     </div>
 
-    <div id="trending" class="tab-content">
+    <!-- Trending Page -->
+    <div id="trending" class="page">
+      <div class="header">
+        <h1>🔥 Trending</h1>
+        <p>Top tokens on Solana</p>
+      </div>
       <div class="card">
         <h2>Trending Tokens</h2>
-        <div id="trending-list" class="empty">Loading trending tokens...</div>
+        <div id="trending-list" class="empty">Loading...</div>
       </div>
     </div>
 
-    <div id="price" class="tab-content">
+    <!-- Price Page -->
+    <div id="price" class="page">
+      <div class="header">
+        <h1>💰 Price</h1>
+        <p>Check token prices</p>
+      </div>
       <div class="card">
-        <h2>Check Price</h2>
+        <h2>Search Token</h2>
         <div class="input-group">
           <input type="text" id="token-address" placeholder="Token address" />
           <button class="btn" onclick="checkPrice()">Search</button>
@@ -354,20 +360,25 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
       </div>
     </div>
 
-    <div id="alerts" class="tab-content">
+    <!-- Alerts Page -->
+    <div id="alerts" class="page">
+      <div class="header">
+        <h1>🔔 Alerts</h1>
+        <p>Your recent alerts</p>
+      </div>
       <div class="card">
         <h2>Recent Alerts</h2>
-        <div id="alerts-list" class="empty">Loading alerts...</div>
+        <div id="alerts-list" class="empty">No alerts yet</div>
       </div>
     </div>
   </div>
 
   <div class="bottom-nav">
-    <button class="nav-btn active" data-tab="dashboard">📊 Dashboard</button>
-    <button class="nav-btn" data-tab="wallets">👛 Wallets</button>
-    <button class="nav-btn" data-tab="trending">🔥 Trending</button>
-    <button class="nav-btn" data-tab="price">💰 Price</button>
-    <button class="nav-btn" data-tab="alerts">🔔 Alerts</button>
+    <button class="nav-btn active" data-page="dashboard" onclick="switchPage('dashboard')"><span class="emoji">📊</span><span>Home</span></button>
+    <button class="nav-btn" data-page="wallets" onclick="switchPage('wallets')"><span class="emoji">👛</span><span>Wallets</span></button>
+    <button class="nav-btn" data-page="trending" onclick="switchPage('trending')"><span class="emoji">🔥</span><span>Trending</span></button>
+    <button class="nav-btn" data-page="price" onclick="switchPage('price')"><span class="emoji">💰</span><span>Price</span></button>
+    <button class="nav-btn" data-page="alerts" onclick="switchPage('alerts')"><span class="emoji">🔔</span><span>Alerts</span></button>
   </div>
 
   <script>
@@ -378,7 +389,7 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
       try {
         initData = window.Telegram?.WebApp?.initData;
         if (!initData) {
-          document.querySelector('.container').innerHTML = '<div class="error">Please open this app from Telegram</div>';
+          document.querySelector('.container').innerHTML = '<div class="error">Please open from Telegram</div>';
           return;
         }
 
@@ -388,12 +399,13 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
           body: JSON.stringify({ initData })
         });
 
-        if (!response.ok) throw new Error('Failed to load session');
+        if (!response.ok) throw new Error('Failed to load');
         const data = await response.json();
         if (!data.ok) throw new Error(data.error);
 
         userData = data;
-        document.getElementById('user-greeting').textContent = 'Welcome back, ' + (data.user.firstName || data.user.username || 'Trader');
+        const name = data.user.firstName || data.user.username || 'Trader';
+        document.getElementById('user-greeting').textContent = 'Welcome, ' + name;
         
         loadDashboard();
         loadWallets();
@@ -401,8 +413,14 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
         loadAlerts();
       } catch (error) {
         console.error(error);
-        document.querySelector('.container').innerHTML = '<div class="error">Error: ' + error.message + '</div>';
       }
+    }
+
+    function switchPage(page) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(page).classList.add('active');
+      document.querySelector('[data-page="' + page + '"]').classList.add('active');
     }
 
     async function loadDashboard() {
@@ -427,13 +445,13 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
     async function loadWallets() {
       const list = document.getElementById('wallets-list');
       if (!userData?.wallets?.length) {
-        list.innerHTML = '<div class="empty">No wallets tracked yet</div>';
+        list.innerHTML = '<div class="empty">No wallets tracked</div>';
         return;
       }
       let html = '';
       userData.wallets.forEach(w => {
-        html += '<div class="wallet-item"><strong>' + (w.label || 'Wallet') + '</strong>' +
-                '<code style="color: #94a3b8; font-size: 0.8rem;">' + w.address.slice(0, 8) + '...' + w.address.slice(-8) + '</code>' +
+        html += '<div class="item"><strong>' + (w.label || 'Wallet') + '</strong>' +
+                '<code style="color: #94a3b8; font-size: 0.75rem;">' + w.address.slice(0, 6) + '...' + w.address.slice(-6) + '</code>' +
                 '<button class="btn btn-small btn-danger" onclick="untrackWallet(' + "'" + w.address + "'" + ')">Remove</button></div>';
       });
       list.innerHTML = html;
@@ -450,9 +468,9 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
         if (data.ok && data.tokens?.length) {
           let html = '';
           data.tokens.forEach((t, i) => {
-            html += '<div class="token-item"><strong>' + (i + 1) + '. ' + t.symbol + '</strong>' +
-                    '<div class="token-price">' + (t.priceUsd ? '$' + parseFloat(t.priceUsd).toFixed(6) : 'N/A') + '</div>' +
-                    '<div class="token-meta">Liq: ' + (t.liquidityUsd ? '$' + (t.liquidityUsd / 1e6).toFixed(2) + 'M' : 'N/A') + '</div></div>';
+            html += '<div class="item"><strong>' + (i + 1) + '. ' + t.symbol + '</strong>' +
+                    '<div style="color: #0ea5e9; font-weight: 600; margin: 0.2rem 0; font-size: 0.9rem;">' + (t.priceUsd ? '$' + parseFloat(t.priceUsd).toFixed(6) : 'N/A') + '</div>' +
+                    '<div class="item-meta">Liq: ' + (t.liquidityUsd ? '$' + (t.liquidityUsd / 1e6).toFixed(1) + 'M' : 'N/A') + ' | Vol: ' + (t.volume24h ? '$' + (t.volume24h / 1e6).toFixed(1) + 'M' : 'N/A') + '</div></div>';
           });
           document.getElementById('trending-list').innerHTML = html;
         }
@@ -464,23 +482,23 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
     async function loadAlerts() {
       const list = document.getElementById('alerts-list');
       if (!userData?.alerts?.length) {
-        list.innerHTML = '<div class="empty">No recent alerts</div>';
+        list.innerHTML = '<div class="empty">No alerts</div>';
         return;
       }
       let html = '';
       userData.alerts.forEach(a => {
-        html += '<div class="alert-item"><strong>' + a.title + '</strong>' +
-                '<p style="margin: 0.5rem 0; color: #cbd5e1;">' + a.message + '</p>' +
-                '<div style="font-size: 0.8rem; color: #94a3b8;">' + new Date(a.createdAt).toLocaleString() + '</div></div>';
+        html += '<div class="item"><strong>' + a.title + '</strong>' +
+                '<div style="margin: 0.2rem 0; color: #cbd5e1; font-size: 0.8rem;">' + a.message + '</div>' +
+                '<div class="item-meta">' + new Date(a.createdAt).toLocaleString() + '</div></div>';
       });
       list.innerHTML = html;
     }
 
     async function trackWallet() {
-      const address = document.getElementById('wallet-address').value;
-      const label = document.getElementById('wallet-label').value;
+      const address = document.getElementById('wallet-address').value.trim();
+      const label = document.getElementById('wallet-label').value.trim();
       if (!address) {
-        alert('Please enter a wallet address');
+        alert('Enter wallet address');
         return;
       }
       try {
@@ -499,12 +517,12 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
           alert('Error: ' + data.error);
         }
       } catch (error) {
-        alert('Error tracking wallet: ' + error.message);
+        alert('Error: ' + error.message);
       }
     }
 
     async function untrackWallet(address) {
-      if (!confirm('Remove this wallet?')) return;
+      if (!confirm('Remove wallet?')) return;
       try {
         const response = await fetch('/api/webapp/untrack', {
           method: 'POST',
@@ -524,11 +542,12 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
     }
 
     async function checkPrice() {
-      const tokenAddress = document.getElementById('token-address').value;
+      const tokenAddress = document.getElementById('token-address').value.trim();
       if (!tokenAddress) {
-        alert('Please enter a token address');
+        alert('Enter token address');
         return;
       }
+      document.getElementById('price-result').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
       try {
         const response = await fetch('/api/webapp/price', {
           method: 'POST',
@@ -540,8 +559,9 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
           const t = data.token;
           document.getElementById('price-result').innerHTML = '<div class="card"><h2>' + t.name + ' (' + t.symbol + ')</h2>' +
             '<div class="stat-grid"><div class="stat-box"><div class="stat-value">' + (t.priceUsd ? '$' + parseFloat(t.priceUsd).toFixed(6) : 'N/A') + '</div>' +
-            '<div class="stat-label">Price</div></div><div class="stat-box"><div class="stat-value">' + (t.liquidityUsd ? '$' + (t.liquidityUsd / 1e6).toFixed(2) + 'M' : 'N/A') + '</div>' +
-            '<div class="stat-label">Liquidity</div></div></div></div>';
+            '<div class="stat-label">Price</div></div><div class="stat-box"><div class="stat-value">' + (t.liquidityUsd ? '$' + (t.liquidityUsd / 1e6).toFixed(1) + 'M' : 'N/A') + '</div>' +
+            '<div class="stat-label">Liquidity</div></div></div>' +
+            '<div class="item-meta" style="margin-top: 0.6rem;">MC: ' + (t.marketCap ? '$' + (t.marketCap / 1e6).toFixed(1) + 'M' : 'N/A') + ' | FDV: ' + (t.fdv ? '$' + (t.fdv / 1e6).toFixed(1) + 'M' : 'N/A') + '</div></div>';
         } else {
           document.getElementById('price-result').innerHTML = '<div class="error">Token not found</div>';
         }
@@ -549,16 +569,6 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
         document.getElementById('price-result').innerHTML = '<div class="error">Error: ' + error.message + '</div>';
       }
     }
-
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tab = btn.dataset.tab;
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById(tab).classList.add('active');
-      });
-    });
 
     window.addEventListener('DOMContentLoaded', init);
   </script>
