@@ -82,9 +82,9 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
 
   app.post('/api/webapp/untrack', async (req, res, next) => {
     try {
-      const { initData, walletId } = req.body;
-      if (!initData || !walletId) {
-        res.status(400).json({ ok: false, error: 'initData and walletId required' });
+      const { initData, address } = req.body;
+      if (!initData || !address) {
+        res.status(400).json({ ok: false, error: 'initData and address required' });
         return;
       }
       const { verifyTelegramInitData, parseTelegramInitData } = await import('../utils/telegramWebApp');
@@ -100,7 +100,7 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
         return;
       }
       const user = await container.users.upsertTelegramUser({ telegramId });
-      await container.wallets.delete(walletId, user.id);
+      await container.wallets.remove(user.id, address);
       res.json({ ok: true, message: 'Wallet untracked' });
     } catch (error) {
       next(error);
@@ -128,9 +128,9 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
       }
       const user = await container.users.upsertTelegramUser({ telegramId });
       const walletCount = await container.wallets.countByUser(user.id);
-      const alertCount = await container.alertsRepo.countByUser(user.id);
-      const subscription = await container.subscriptions.getActive(user.id);
-      res.json({ ok: true, walletCount, alertCount, subscription: subscription?.plan || 'FREE', xp: user.xp });
+      const alerts = await container.alertsRepo.recentForUser(user.id, 100);
+      const subscription = await container.subscriptionRepo.activeForUser(user.id);
+      res.json({ ok: true, walletCount, alertCount: alerts.length, subscription: subscription?.plan || 'FREE', xp: user.xp });
     } catch (error) {
       next(error);
     }
@@ -434,7 +434,7 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
       userData.wallets.forEach(w => {
         html += '<div class="wallet-item"><strong>' + (w.label || 'Wallet') + '</strong>' +
                 '<code style="color: #94a3b8; font-size: 0.8rem;">' + w.address.slice(0, 8) + '...' + w.address.slice(-8) + '</code>' +
-                '<button class="btn btn-small btn-danger" onclick="untrackWallet(' + "'" + w.id + "'" + ')">Remove</button></div>';
+                '<button class="btn btn-small btn-danger" onclick="untrackWallet(' + "'" + w.address + "'" + ')">Remove</button></div>';
       });
       list.innerHTML = html;
     }
@@ -503,13 +503,13 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
       }
     }
 
-    async function untrackWallet(walletId) {
+    async function untrackWallet(address) {
       if (!confirm('Remove this wallet?')) return;
       try {
         const response = await fetch('/api/webapp/untrack', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ initData, walletId })
+          body: JSON.stringify({ initData, address })
         });
         const data = await response.json();
         if (data.ok) {
