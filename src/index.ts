@@ -17,14 +17,14 @@ async function main() {
     const bot = createBot(container);
     logger.info('✅ Bot created');
 
-    logger.info('Launching bot...');
-    await bot.launch();
-    logger.info('✅ Bot launched and polling for updates');
-
     const server = createServer(bot, container);
     server.listen(env.PORT, () => {
       logger.info(`✅ Express server ready on port ${env.PORT}`);
     });
+
+    logger.info('Launching bot...');
+    await bot.launch();
+    logger.info('✅ Bot launched and polling for updates');
 
     // Graceful shutdown
     process.once('SIGINT', async () => {

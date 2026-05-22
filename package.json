@@ -6,9 +6,10 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
-    "start": "node dist/src/index.js",
+    "start": "npm run prisma:deploy && node dist/src/index.js",
     "prisma:generate": "npx prisma generate",
     "prisma:migrate": "npx prisma migrate dev",
+    "prisma:deploy": "npx prisma migrate deploy",
     "docker:up": "docker-compose up -d"
   },
   "dependencies": {
