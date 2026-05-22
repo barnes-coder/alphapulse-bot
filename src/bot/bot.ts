@@ -7,7 +7,7 @@ import { rateLimitMiddleware } from '../middleware/rateLimit.middleware';
 import { registerCommands } from '../commands';
 import { AlphaContext } from '../types';
 
-export function createBot(container: AppContainer): Telegraf<AlphaContext> {
+export async function createBot(container: AppContainer): Promise<Telegraf<AlphaContext>> {
   const bot = new Telegraf<AlphaContext>(env.BOT_TOKEN);
 
   bot.use(async (ctx, next) => {
@@ -20,7 +20,7 @@ export function createBot(container: AppContainer): Telegraf<AlphaContext> {
 
   registerCommands(bot);
 
-  bot.telegram.setMyCommands([
+  await bot.telegram.setMyCommands([
     { command: 'start', description: 'Show welcome message and main bot menu' },
     { command: 'help', description: 'Show available commands and usage' },
     { command: 'track', description: 'Track a wallet address' },

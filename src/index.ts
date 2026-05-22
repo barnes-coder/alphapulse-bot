@@ -14,7 +14,7 @@ async function main() {
     logger.info('✅ Container created');
 
     logger.info('Creating bot with container...');
-    const bot = createBot(container);
+    const bot = await createBot(container);
     logger.info('✅ Bot created');
 
     const server = createServer(bot, container);
