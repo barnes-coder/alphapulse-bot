@@ -136,6 +136,20 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
     }
   });
 
+  app.get('/commands', (_req, res) => {
+    const commands = [
+      { command: 'start', description: 'Start the bot' },
+      { command: 'app', description: 'Open mini app' },
+      { command: 'wallet', description: 'Manage wallets' },
+      { command: 'trending', description: 'View trending tokens' },
+      { command: 'price', description: 'Check token price' },
+      { command: 'alerts', description: 'View your alerts' },
+      { command: 'stats', description: 'View your stats' },
+      { command: 'help', description: 'Get help' }
+    ];
+    res.json({ ok: true, commands });
+  });
+
   app.get('/webapp', (_req, res) => {
     const html = `<!DOCTYPE html>
 <html lang="en">
@@ -290,14 +304,14 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
     </div>
 
     <div class="nav-tabs">
-      <button class="nav-btn active" data-tab="dashboard">Dashboard</button>
-      <button class="nav-btn" data-tab="wallets">Wallets</button>
-      <button class="nav-btn" data-tab="trending">Trending</button>
-      <button class="nav-btn" data-tab="price">Price</button>
-      <button class="nav-btn" data-tab="alerts">Alerts</button>
+      <button class="nav-btn active" onclick="showPage('home')">📊 Home</button>
+      <button class="nav-btn" onclick="showPage('wallets')">👛 Wallets</button>
+      <button class="nav-btn" onclick="showPage('trending')">🔥 Trending</button>
+      <button class="nav-btn" onclick="showPage('price')">💰 Price</button>
+      <button class="nav-btn" onclick="showPage('alerts')">🔔 Alerts</button>
     </div>
 
-    <div id="dashboard" class="tab-content active">
+    <div id="home" class="tab-content active">
       <div class="card">
         <h2>Your Stats</h2>
         <div class="stat-grid">
@@ -363,11 +377,11 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
   </div>
 
   <div class="bottom-nav">
-    <button class="nav-btn active" data-tab="dashboard">📊 Dashboard</button>
-    <button class="nav-btn" data-tab="wallets">👛 Wallets</button>
-    <button class="nav-btn" data-tab="trending">🔥 Trending</button>
-    <button class="nav-btn" data-tab="price">💰 Price</button>
-    <button class="nav-btn" data-tab="alerts">🔔 Alerts</button>
+    <button class="nav-btn active" onclick="showPage('home')">📊 Home</button>
+    <button class="nav-btn" onclick="showPage('wallets')">👛 Wallets</button>
+    <button class="nav-btn" onclick="showPage('trending')">🔥 Trending</button>
+    <button class="nav-btn" onclick="showPage('price')">💰 Price</button>
+    <button class="nav-btn" onclick="showPage('alerts')">🔔 Alerts</button>
   </div>
 
   <script>
@@ -538,10 +552,17 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
         const data = await response.json();
         if (data.ok) {
           const t = data.token;
+          let wallets = '';
+          if (userData?.wallets?.length) {
+            wallets = '<h3 style="margin-top: 1rem; color: #f1f5f9;">💳 Payment Wallets</h3>';
+            userData.wallets.forEach(w => {
+              wallets += '<div class="item"><strong>' + (w.label || 'Wallet') + '</strong><br><code style="color: #94a3b8;">' + w.address.slice(0, 8) + '...' + w.address.slice(-8) + '</code></div>';
+            });
+          }
           document.getElementById('price-result').innerHTML = '<div class="card"><h2>' + t.name + ' (' + t.symbol + ')</h2>' +
             '<div class="stat-grid"><div class="stat-box"><div class="stat-value">' + (t.priceUsd ? '$' + parseFloat(t.priceUsd).toFixed(6) : 'N/A') + '</div>' +
             '<div class="stat-label">Price</div></div><div class="stat-box"><div class="stat-value">' + (t.liquidityUsd ? '$' + (t.liquidityUsd / 1e6).toFixed(2) + 'M' : 'N/A') + '</div>' +
-            '<div class="stat-label">Liquidity</div></div></div></div>';
+            '<div class="stat-label">Liquidity</div></div></div>' + wallets + '</div>';
         } else {
           document.getElementById('price-result').innerHTML = '<div class="error">Token not found</div>';
         }
@@ -550,15 +571,12 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
       }
     }
 
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tab = btn.dataset.tab;
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById(tab).classList.add('active');
-      });
-    });
+    function showPage(page) {
+      document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
+      document.getElementById(page).classList.add('active');
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+    }
 
     window.addEventListener('DOMContentLoaded', init);
   </script>
