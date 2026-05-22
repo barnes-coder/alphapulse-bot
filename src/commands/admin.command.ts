@@ -18,9 +18,47 @@ export function registerAdminCommand(bot: Telegraf<AlphaContext>) {
         '',
         '`/broadcast <message>`',
         '`/grantpremium <telegramId> <days>`',
+        '`/createcode <PREMIUM|PRO> <days> [count]`',
+        '`/listcodes`',
         '`/ban <telegramId>`',
         '`/lookup <telegramId>`',
         '`/restartbot`'
+      ].join('\n'),
+      { parse_mode: 'Markdown' }
+    );
+  });
+
+  bot.command('createcode', async (ctx) => {
+    if (!(await requireAdmin(ctx))) return;
+    const [, planRaw, daysRaw, countRaw] = ctx.message.text.split(/\s+/);
+    const plan = planRaw?.toUpperCase();
+    const days = Number(daysRaw || '30');
+    const count = Number(countRaw || '1');
+
+    if (!['PREMIUM', 'PRO', 'FREE'].includes(plan) || !Number.isFinite(days) || days <= 0 || !Number.isFinite(count) || count <= 0) {
+      await ctx.reply('Usage: /createcode <PREMIUM|PRO|FREE> <days> [count]');
+      return;
+    }
+
+    const codes = await ctx.container.redeemCodes.generateCodes(ctx.user!.id, plan as any, days, count);
+    await ctx.reply(
+      ['*Redeemable Codes Created*', '', ...codes.map((code) => `• \\`${code}\\``)].join('\n'),
+      { parse_mode: 'Markdown' }
+    );
+  });
+
+  bot.command('listcodes', async (ctx) => {
+    if (!(await requireAdmin(ctx))) return;
+    const codes = await ctx.container.redeemCodes.listActiveCodes();
+    if (!codes.length) {
+      await ctx.reply('No active redeem codes available.');
+      return;
+    }
+    await ctx.reply(
+      [
+        '*Active Redeem Codes*',
+        '',
+        ...codes.map((code) => `${code.code} • ${code.plan} ${code.days}d`)
       ].join('\n'),
       { parse_mode: 'Markdown' }
     );

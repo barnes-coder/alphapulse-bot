@@ -2,8 +2,9 @@ import { Telegraf } from 'telegraf';
 import { AppContainer } from '../container';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
+import { AlphaContext } from '../types';
 
-export function startWalletPollingJob(bot: Telegraf, container: AppContainer) {
+export function startWalletPollingJob(bot: Telegraf<AlphaContext>, container: AppContainer) {
   const run = async () => {
     try {
       await container.subscriptionRepo.expireOldSubscriptions();

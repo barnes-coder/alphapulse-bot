@@ -5,9 +5,13 @@ import { isHttpsUrl } from '../utils/validators';
 
 export function registerAppCommand(bot: Telegraf<AlphaContext>) {
   bot.command('app', async (ctx) => {
-    if (!env.WEB_APP_URL || !isHttpsUrl(env.WEB_APP_URL)) {
+    const allowLocal = env.NODE_ENV === 'development';
+    const webAppUrl = env.WEB_APP_URL ?? '';
+    const hasUrl = Boolean(webAppUrl);
+    const isSecure = hasUrl && isHttpsUrl(webAppUrl);
+    if (!hasUrl || (!isSecure && !allowLocal)) {
       await ctx.reply(
-        'The web app is not available in this environment. Set a secure HTTPS WEB_APP_URL in your .env if you want an inline app button.',
+        'The web app is not available in this environment. Set a secure HTTPS WEB_APP_URL in your .env (or use http locally in development) if you want an inline app button.',
         { parse_mode: 'Markdown' }
       );
       return;
@@ -18,7 +22,7 @@ export function registerAppCommand(bot: Telegraf<AlphaContext>) {
       {
         parse_mode: 'Markdown',
         reply_markup: {
-          inline_keyboard: [[{ text: 'Launch App', web_app: { url: env.WEB_APP_URL } }]]
+          inline_keyboard: [[{ text: 'Launch App', web_app: { url: webAppUrl } }]]
         }
       }
     );

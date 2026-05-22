@@ -1,6 +1,7 @@
 import express from 'express';
 import { AppContainer } from '../container';
 import { parseTelegramInitData, verifyTelegramInitData } from '../utils/telegramWebApp';
+import { logger } from '../utils/logger';
 
 export function webappRoutes(container: AppContainer) {
   const router = express.Router();
@@ -14,6 +15,7 @@ export function webappRoutes(container: AppContainer) {
       }
 
       if (!verifyTelegramInitData(initData)) {
+        logger.warn({ initData }, 'Telegram initData verification failed');
         res.status(401).json({ ok: false, error: 'invalid telegram init data' });
         return;
       }
@@ -57,5 +59,42 @@ export function webappRoutes(container: AppContainer) {
     }
   });
 
+  // Development-only debug session: accept telegramId and return same payload
+  router.post('/debug-session', async (req, res, next) => {
+    try {
+      if (process.env.NODE_ENV !== 'development') {
+        res.status(403).json({ ok: false, error: 'debug session only allowed in development' });
+        return;
+      }
+
+      const { telegramId } = req.body;
+      const id = Number(telegramId || 0);
+      if (!id) {
+        res.status(400).json({ ok: false, error: 'telegramId required' });
+        return;
+      }
+
+      const user = await container.users.upsertTelegramUser({ telegramId: id });
+      const wallets = await container.wallets.listByUser(user.id);
+      const alerts = await container.alertsRepo.recentForUser(user.id, 10);
+
+      res.json({
+        ok: true,
+        user: {
+          id: user.id,
+          telegramId: user.telegramId.toString(),
+          username: user.username,
+          firstName: user.firstName,
+          lastName: user.lastName
+        },
+        wallets: wallets.map((wallet) => ({ address: wallet.address, label: wallet.label, createdAt: wallet.createdAt })),
+        alerts: alerts.map((alert) => ({ title: alert.title, message: alert.message, createdAt: alert.createdAt }))
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   return router;
 }
+

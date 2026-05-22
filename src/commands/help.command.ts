@@ -11,6 +11,8 @@ export function registerHelpCommand(bot: Telegraf<AlphaContext>) {
         '`/track <wallet>` - follow a Solana wallet',
         '`/untrack <wallet>` - remove a tracked wallet',
         '`/wallets` - list your tracked wallets',
+        '`/suggest` - get starter wallet ideas to track',
+        '`/redeem <code>` - redeem an owner-issued premium code',
         '`/dashboard` - open your dashboard and Web App prompt',
         '`/app` - launch the mini app when a secure URL is configured',
         '',

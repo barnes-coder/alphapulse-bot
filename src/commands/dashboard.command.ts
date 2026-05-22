@@ -19,6 +19,7 @@ export function registerDashboardCommand(bot: Telegraf<AlphaContext>) {
       '',
       alertSummary,
       '',
+      'Free users can track up to 5 wallets. Upgrade to premium to unlock unlimited tracking.',
       'Use the button below to open your Web App dashboard when available.'
     ].join('\n');
 

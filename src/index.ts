@@ -4,6 +4,8 @@ import { createServer } from './server/express';
 import { createBot } from './bot/bot';
 import { prisma } from './database/prisma';
 import { logger } from './utils/logger';
+import { startWalletPollingJob } from './jobs/walletPolling.job';
+import { startDailyDigestJob } from './jobs/dailyDigest.job';
 
 async function main() {
   try {
@@ -22,14 +24,24 @@ async function main() {
       logger.info(`✅ Express server ready on port ${env.PORT}`);
     });
 
-    logger.info('Launching bot...');
-    await bot.launch();
-    logger.info('✅ Bot launched and polling for updates');
+    if (env.BOT_MODE === 'polling') {
+      logger.info('Launching bot (polling)...');
+      await bot.launch();
+      logger.info('✅ Bot launched and polling for updates');
+    } else {
+      logger.info('Bot running in webhook mode (no polling launch)');
+    }
+
+    // start background jobs
+    const stopWalletPolling = startWalletPollingJob(bot, container);
+    const stopDaily = startDailyDigestJob(bot, container);
 
     // Graceful shutdown
     process.once('SIGINT', async () => {
       logger.info('SIGINT received, shutting down gracefully...');
       bot.stop();
+      stopWalletPolling && stopWalletPolling();
+      stopDaily && stopDaily();
       await prisma.$disconnect();
       process.exit(0);
     });
@@ -37,6 +49,8 @@ async function main() {
     process.once('SIGTERM', async () => {
       logger.info('SIGTERM received, shutting down gracefully...');
       bot.stop();
+      stopWalletPolling && stopWalletPolling();
+      stopDaily && stopDaily();
       await prisma.$disconnect();
       process.exit(0);
     });

@@ -1,0 +1,16 @@
+start - Get started with CoinRadar and link your wallet
+help - Show help and available commands
+track - Track a wallet (usage: /track <address>)
+untrack - Stop tracking a wallet (usage: /untrack <address>)
+wallets - List your tracked wallets
+price - Get token price snapshot
+trending - Show trending tokens
+daily - Toggle Daily Pulse (daily digest)
+dailytime - Set Daily Pulse delivery time (usage: /dailytime HH:MM UTC)
+settings - Show account settings and plan
+refer - Get your referral code
+upgrade - Upgrade to Premium
+stats - Show your usage statistics
+alerts - List recent alerts
+whales - Show recent whale activity
+dashboard - Open your web dashboard

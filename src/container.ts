@@ -4,10 +4,12 @@ import { UserRepository } from './database/repositories/user.repository';
 import { WalletRepository } from './database/repositories/wallet.repository';
 import { SubscriptionRepository } from './database/repositories/subscription.repository';
 import { AlertRepository } from './database/repositories/alert.repository';
+import { RedeemCodeRepository } from './database/repositories/redeemCode.repository';
 import { DexScreenerService } from './services/dexscreener.service';
 import { HeliusService } from './services/helius.service';
 import { TokenService } from './services/token.service';
 import { SubscriptionService } from './services/subscription.service';
+import { RedeemCodeService } from './services/redeemCode.service';
 import { AlertService } from './services/alert.service';
 import { WalletMonitorService } from './services/walletMonitor.service';
 import { BirdeyeService } from './services/birdeye.service';
@@ -27,6 +29,8 @@ export function createContainer() {
   const helius = new HeliusService();
   const prices = new PriceService(redis);
   const subscriptions = new SubscriptionService(subscriptionRepo);
+  const redeemCodeRepo = new RedeemCodeRepository(prisma);
+  const redeemCodes = new RedeemCodeService(redeemCodeRepo, subscriptions);
   const alerts = new AlertService(alertsRepo);
   const tokens = new TokenService(dex, birdeye);
   const ai = new AiService();
@@ -35,6 +39,25 @@ export function createContainer() {
   const leaderboard = new LeaderboardService(prisma);
 
   return {
+    prisma,
+    redis,
+    users,
+    wallets,
+    subscriptionRepo,
+    alertsRepo,
+    dex,
+    birdeye,
+    helius,
+    prices,
+    subscriptions,
+    redeemCodes,
+    alerts,
+    tokens,
+    ai,
+    payments,
+    walletMonitor,
+    leaderboard
+  };
     prisma,
     redis,
     users,

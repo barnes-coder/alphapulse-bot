@@ -5,6 +5,7 @@ import { HeliusService } from './helius.service';
 import { AlertService } from './alert.service';
 import { shortAddress, usd } from '../utils/formatters';
 import { logger } from '../utils/logger';
+import { AlphaContext } from '../types';
 
 export class WalletMonitorService {
   constructor(
@@ -13,7 +14,7 @@ export class WalletMonitorService {
     private readonly alerts: AlertService
   ) {}
 
-  async poll(bot: Telegraf) {
+  async poll(bot: Telegraf<AlphaContext>) {
     const wallets = await this.wallets.activeWallets();
     logger.info({ wallets: wallets.length }, 'Polling tracked wallets');
 

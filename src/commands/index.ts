@@ -14,9 +14,12 @@ import { registerTrendingCommand } from './trending.command';
 import { registerUntrackCommand } from './untrack.command';
 import { registerUpgradeCommand } from './upgrade.command';
 import { registerWalletsCommand } from './wallets.command';
+import { registerSuggestCommand } from './suggest.command';
+import { registerRedeemCommand } from './redeem.command';
 import { registerWhalesCommand } from './whales.command';
 import { registerDashboardCommand } from './dashboard.command';
 import { registerAppCommand } from './app.command';
+import { registerDailyCommand } from './daily.command';
 
 export function registerCommands(bot: Telegraf<AlphaContext>) {
   registerStartCommand(bot);
@@ -24,6 +27,7 @@ export function registerCommands(bot: Telegraf<AlphaContext>) {
   registerTrackCommand(bot);
   registerUntrackCommand(bot);
   registerWalletsCommand(bot);
+  registerSuggestCommand(bot);
   registerPriceCommand(bot);
   registerTrendingCommand(bot);
   registerAnalyzeCommand(bot);
@@ -31,9 +35,11 @@ export function registerCommands(bot: Telegraf<AlphaContext>) {
   registerReferCommand(bot);
   registerSettingsCommand(bot);
   registerAlertsCommand(bot);
+  registerRedeemCommand(bot);
   registerWhalesCommand(bot);
   registerDashboardCommand(bot);
   registerAppCommand(bot);
+  registerDailyCommand(bot);
   registerStatsCommand(bot);
   registerAdminCommand(bot);
 }

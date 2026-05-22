@@ -1,0 +1,24 @@
+Short description:
+CoinRadar — real-time wallet & token alerts, daily digest, and portfolio insights.
+
+Long description (up to 4096 chars):
+CoinRadar helps you track on-chain wallets, receive instant alerts for large movements or important events, and get a concise Daily Pulse digest summarizing your tracked wallets and recent alerts. Track wallets, set price/alert notifications, and view a simple dashboard. Upgrade to Premium for advanced features and higher limits.
+
+Commands:
+- /start — Welcome message and quick actions
+- /track <address> — Add a wallet to your tracked list
+- /untrack <address> — Remove a tracked wallet
+- /wallets — List your active tracked wallets
+- /price — Snapshot token price information
+- /trending — Currently trending tokens
+- /daily — Toggle Daily Pulse digest on/off
+- /dailytime HH:MM — Set daily digest delivery time (UTC)
+- /settings — Account summary and plan
+- /refer — Share referral code to earn rewards
+- /upgrade — View upgrade options
+- /stats — Your usage statistics
+- /alerts — Recent alert history
+- /whales — Notable whale activity
+- /dashboard — Open the web dashboard
+
+Make sure to keep notifications enabled for the best experience.

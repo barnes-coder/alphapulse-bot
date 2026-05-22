@@ -2,12 +2,13 @@ import { AlertType } from '@prisma/client';
 import { Telegraf } from 'telegraf';
 import { AlertRepository } from '../database/repositories/alert.repository';
 import { alertIcon } from '../utils/formatters';
+import { AlphaContext } from '../types';
 
 export class AlertService {
   constructor(private readonly alerts: AlertRepository) {}
 
   async send(
-    bot: Telegraf,
+    bot: Telegraf<AlphaContext>,
     input: {
       telegramId: bigint;
       userId: string;

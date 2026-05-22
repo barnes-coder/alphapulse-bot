@@ -6,7 +6,10 @@ export function registerWalletsCommand(bot: Telegraf<AlphaContext>) {
   async function showWallets(ctx: AlphaContext) {
     const wallets = await ctx.container.wallets.listByUser(ctx.user!.id);
     if (!wallets.length) {
-      await ctx.reply('No wallets tracked yet. Add one with `/track <wallet>`.', { parse_mode: 'Markdown' });
+      await ctx.reply(
+        ['No wallets tracked yet.', '', 'Use `/suggest` to load starter public wallets or `/track <wallet>` to add your own.', '', 'Premium users get unlimited wallets; free users can track up to 5.'].join('\n'),
+        { parse_mode: 'Markdown' }
+      );
       return;
     }
 

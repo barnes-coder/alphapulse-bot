@@ -25,6 +25,9 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
   app.use('/api/webapp', webappRoutes(container));
 
   app.get('/webapp', (_req, res) => {
+    const debugEnabled = process.env.NODE_ENV === 'development';
+    const debugTelegramId = process.env.TEST_TELEGRAM_ID || '';
+
     res.send(`
       <!DOCTYPE html>
       <html lang="en">
@@ -57,6 +60,7 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
           <div class="card" id="summary-card">
             <h2>Loading your data…</h2>
             <p class="status">Please open this page from Telegram if you want the app to identify you automatically.</p>
+            ${debugEnabled ? `<p><button id="load-demo">Load demo user</button></p>` : ''}
           </div>
 
           <div class="card" id="wallets-card" style="display:none;">
@@ -125,8 +129,8 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
               });
 
               if (!response.ok) {
-                const error = await response.json();
-                statusEl.textContent = 'Unable to load dashboard: ' + (error?.error || response.statusText);
+                const error = await response.json().catch(() => null);
+                statusEl.textContent = 'Unable to load dashboard: ' + (error?.error || response.statusText || 'unknown');
                 return;
               }
 
@@ -142,7 +146,35 @@ export function createServer(bot: Telegraf<any>, container: AppContainer) {
             }
           }
 
+          // debug helper: load demo user via server-side debug endpoint (development only)
+          async function loadDemo(telegramId) {
+            try {
+              const response = await fetch('/api/webapp/debug-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ telegramId })
+              });
+              if (!response.ok) {
+                const err = await response.json().catch(()=>null);
+                statusEl.textContent = 'Debug load failed: ' + (err?.error || response.statusText);
+                return;
+              }
+              const json = await response.json();
+              if (!json.ok) {
+                statusEl.textContent = 'Debug load failed: ' + (json.error || 'unknown');
+                return;
+              }
+              renderDashboard(json);
+            } catch (err) {
+              statusEl.textContent = 'Debug load error: ' + (err.message || err);
+            }
+          }
+
           window.addEventListener('DOMContentLoaded', loadDashboard);
+          const loadBtn = document.getElementById('load-demo');
+          if (loadBtn) {
+            loadBtn.addEventListener('click', () => loadDemo('${debugTelegramId || ''}'));
+          }
         </script>
       </body>
       </html>

@@ -21,7 +21,7 @@ const envSchema = z.object({
   AI_API_KEY: z.string().optional().or(z.literal('')),
   AI_MODEL: z.string().default('crypto-risk-analyst'),
   ADMIN_TELEGRAM_IDS: z.string().optional().or(z.literal('')),
-  FREE_WALLET_LIMIT: z.coerce.number().default(3),
+  FREE_WALLET_LIMIT: z.coerce.number().default(5),
   PREMIUM_WALLET_LIMIT: z.coerce.number().default(50),
   POLLING_INTERVAL_SECONDS: z.coerce.number().default(30),
   PRICE_CACHE_TTL_MINUTES: z.coerce.number().default(5),

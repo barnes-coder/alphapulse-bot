@@ -27,6 +27,19 @@ export class HeliusService {
     }));
   }
 
+  async getBalance(address: string): Promise<{ lamports: number; sol: number } | null> {
+    if (!env.HELIUS_API_KEY) return null;
+    try {
+      const { data } = await this.http.get(`/addresses/${address}/balance`);
+      // helius returns lamports and possibly tokenBalances; normalize
+      const lamports = Number(data?.lamports ?? data?.sol_balance ?? 0);
+      const sol = lamports ? lamports / 1_000_000_000 : 0;
+      return { lamports, sol };
+    } catch (err) {
+      return null;
+    }
+  }
+
   private estimateUsd(tx: any, solPrice: number = 150): number | undefined {
     // TODO: Integrate a price cache (e.g., from DexScreener or Birdeye) 
     // to avoid hardcoding the SOL price.
