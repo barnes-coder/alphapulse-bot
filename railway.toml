@@ -8,6 +8,7 @@ healthcheckPath = "/health"
 healthcheckTimeout = 100
 memoryLimit = "512Mi"
 cpuLimit = "500m"
+preDeployCommand = "npx prisma migrate deploy"
 
 [env]
 NODE_ENV = "production"
